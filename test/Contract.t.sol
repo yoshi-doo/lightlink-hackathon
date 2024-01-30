@@ -68,14 +68,16 @@ contract EventTest is Test {
 
     function testClose() public {
         vm.startPrank(org2);
-        Event(factoryContract.getEvents(org1)[0]).buy{value: 4 ether}(4);
+        factoryContract.buy{value: 4 ether}(factoryContract.getCreatedEvents(org1)[0], 4);
         vm.stopPrank();
-        address org1Event = factoryContract.getEvents(org1)[0];
+        address org1Event = factoryContract.getCreatedEvents(org1)[0];
         console.log("balance org1 %s", org1.balance);
         console.log("balance org2 %s", org2.balance);
         console.log("balance factory %s", address(factoryContract).balance);
-        vm.prank(org1);
+        vm.startPrank(org1);
+        factoryContract.validate(factoryContract.getCreatedEvents(org1)[0], 1, org2);
         factoryContract.close(org1Event);
+        vm.stopPrank();
         address[] memory currentEvents2 = factoryContract.getCurrentEvents();
         for (uint256 index = 0; index < currentEvents2.length; index++) {
             console.log("curr %s", currentEvents2[index]);
@@ -88,5 +90,6 @@ contract EventTest is Test {
         console.log("balance org1 %s", org1.balance);
         console.log("balance org2 %s", org2.balance);
         console.log("balance factory %s", address(factoryContract).balance);
+        console.log("event adr %s", factoryContract.getOwnedTicketEvents(org2)[0]);
     }
 }

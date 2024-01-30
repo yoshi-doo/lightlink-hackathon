@@ -7,6 +7,10 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 import {IEventFactory} from "./interfaces/IEventFactory.sol";
 import {Event} from "./Event.sol";
 
+/**
+ * @title A Factory contract to create and close events contracts.
+ * @notice Each event is represented by an ERC721 contract and tickets correspond to ERC721 tokens.
+ */
 contract EventFactory is IEventFactory, Ownable, ReentrancyGuard {
     uint256 public listingFee;
     uint256 private constant _MAX_TICKETS_PER_USER = 2;
@@ -14,6 +18,7 @@ contract EventFactory is IEventFactory, Ownable, ReentrancyGuard {
     address[] private _archivedEvents;
 
     mapping(address => EventDetails) private _eventMap;
+    mapping(address => address[]) private _ownerToEventMap;
     mapping(address => address[]) private _userToEventMap;
 
     constructor(uint256 listingFee_) {
@@ -23,6 +28,21 @@ contract EventFactory is IEventFactory, Ownable, ReentrancyGuard {
 
     receive() external payable override {}
 
+    /**
+     * @notice Function to create a new Event contract.
+     * @dev listingFee amount should be passed in msg.value.
+     * @param name Event name.
+     * @param symbol Event contract ERC721 symbol.
+     * @param description Event description.
+     * @param imageUrl Event image url.
+     * @param imageUrlValidated Event image url after validated.
+     * @param dateTime Event dateTime.
+     * @param location Event location.
+     * @param amount Event ticket amount to be minted.
+     * @param price Event ticket price.
+     * @param maxAllowedTicketsPerUser Maximum tickets allowed per user default is 2.
+     * @return bool Status of event creation.
+     */
     function create(
         string memory name,
         string memory symbol,
@@ -65,29 +85,92 @@ contract EventFactory is IEventFactory, Ownable, ReentrancyGuard {
             _currentEvents.length - 1
         );
 
-        _userToEventMap[msg.sender].push(address(eventContract));
+        _ownerToEventMap[msg.sender].push(address(eventContract));
         return true;
     }
 
+    /**
+     * @notice Function to buy a ticket from an Event contract.
+     * @param event_ Event contract address.
+     * @param amount Amount of tickets to buy.
+     * @return bool status of ticket purchase.
+     */
+    function buy(address event_, uint256 amount) external payable override returns (bool) {
+        Event eventContract = Event(event_);
+        bool success = eventContract.buy{value: msg.value}(amount, msg.sender);
+        require(success);
+        _userToEventMap[msg.sender].push(event_);
+        return success;
+    }
+
+    /**
+     * @notice Function to validate a ticket in Event contract.
+     * @param event_ Event contract address.
+     * @param tokenId Token Id of the event ticket.
+     * @param claimer Claimer of the event ticket.
+     * @return bool status of event closure.
+     */
+    function validate(
+        address event_,
+        uint256 tokenId,
+        address claimer
+    ) external override returns (bool) {
+        require(_eventMap[event_].status != EventStatus.ARCHIVED, "Event is already archived");
+        Event eventContract = Event(event_);
+        require(msg.sender == eventContract.creator(), "Caller is not creator of the event");
+        bool success = eventContract.validate(tokenId, claimer);
+        require(success);
+        return success;
+    }
+
+    /**
+     * @notice Function to close an Event contract.
+     * @dev Closing the event transfer the commission to the EventFactory contract and the remaining to the creator/owner of the event.
+     * @param event_ Event contract address.
+     * @return bool status of event closure.
+     */
     function close(address event_) external override nonReentrant returns (bool) {
         require(_eventMap[event_].status != EventStatus.ARCHIVED, "Event is already archived");
         Event eventContract = Event(event_);
-        require(msg.sender == eventContract.owner(), "Caller is not owner of the event");
+        require(msg.sender == eventContract.creator(), "Caller is not creator of the event");
         bool success = eventContract.close();
         require(success);
         _archiveEvent(event_);
         return success;
     }
 
+    /**
+     * @notice Function to return list of current events.
+     * @return currentEvents Array of current Event contract addresses.
+     */
     function getCurrentEvents() external view override returns (address[] memory) {
         return _currentEvents;
     }
 
+    /**
+     * @notice Function to return list of archived events.
+     * @dev Archived events are events that are closed by the Event contract owner.
+     * @return archivedEvents Array of archived Event contract addresses.
+     */
     function getArchivedEvents() external view override returns (address[] memory) {
         return _archivedEvents;
     }
 
-    function getEvents(address user) external view override returns (address[] memory) {
+    /**
+     * @notice Function to get events created by a user.
+     * @param owner Address of the creator of events.
+     * @return events Array of Event contract addresses of tickets owned by the user.
+     */
+    function getCreatedEvents(address owner) external view override returns (address[] memory) {
+        return _ownerToEventMap[owner];
+    }
+
+    /**
+     * @notice Function to get events created by a user.
+     * @param user Address of the user for which tickets are to be retreived.
+     * @return events Array of Event contract addresses created by the user.
+     */
+    function getOwnedTicketEvents(address user) external view override returns (address[] memory) {
         return _userToEventMap[user];
     }
 
