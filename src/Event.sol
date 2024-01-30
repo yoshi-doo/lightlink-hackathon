@@ -96,10 +96,17 @@ contract Event is IEvent, Ownable, ReentrancyGuard, ContractMetadataLogic, ERC72
         return true;
     }
 
-    function close() external override onlyOwner nonReentrant returns (bool) {
+    function close() external override nonReentrant returns (bool) {
+        require(msg.sender == deployer, "Caller not deployer");
         require(!isClosed, "Event contract is already closed");
+
+        isClosed = true;
+
         uint256 amount = address(this).balance;
-        require(amount > 0, "Contract balance is 0");
+        // require(amount > 0, "Contract balance is 0");
+        if (amount <= 0) {
+            return true;
+        }
 
         address _owner = owner();
         uint256 bps = uint256(commissionPercentage) * 100;
