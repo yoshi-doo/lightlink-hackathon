@@ -30,6 +30,9 @@ contract Event is IEvent, Ownable, ReentrancyGuard, ContractMetadataLogic, ERC72
 
     mapping(uint256 => bool) public isValidated;
 
+    event TicketBought(address user, uint256 tokenId);
+    event TicketValidated(uint256 tokenId);
+
     constructor(
         address owner,
         string memory name,
@@ -81,11 +84,13 @@ contract Event is IEvent, Ownable, ReentrancyGuard, ContractMetadataLogic, ERC72
             _tokenIds.increment();
             uint256 tokenId = _tokenIds.current();
             _safeMint(msg.sender, tokenId);
+            emit TicketBought(msg.sender, tokenId);
         }
         eventDetails.availableTickets = eventDetails.availableTickets.sub(amount);
         if (eventDetails.availableTickets == 0) {
             isSoldOut = true;
         }
+
         return true;
     }
 
@@ -93,6 +98,7 @@ contract Event is IEvent, Ownable, ReentrancyGuard, ContractMetadataLogic, ERC72
         require(isValidated[tokenId] != true, "Ticket is already validated");
         require(ERC721.ownerOf(tokenId) == claimer, "Claimer is not the owner");
         isValidated[tokenId] = true;
+        emit TicketValidated(tokenId);
         return true;
     }
 
