@@ -190,7 +190,7 @@ contract Event is IEvent, Ownable, ReentrancyGuard, ContractMetadataLogic, ERC72
                 '", "price": "',
                 eventDetails.price.toString(),
                 '", "available_tickets": "',
-                eventDetails.availableTickets,
+                eventDetails.availableTickets.toString(),
                 '"}'
             )
         );

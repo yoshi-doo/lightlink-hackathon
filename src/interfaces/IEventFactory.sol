@@ -26,6 +26,7 @@ interface IEventFactory {
         uint256 maxAllowedTicketsPerUser
     ) external payable returns (bool);
     function close(address event_) external returns (bool);
+    function withdraw() external returns (bool);
     function buy(address event_, uint256 amount) external payable returns (bool);
     function validate(address event_, uint256 tokenId, address claimer) external returns (bool);
     function getCurrentEvents() external view returns (address[] memory);

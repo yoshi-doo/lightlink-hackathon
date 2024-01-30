@@ -12,14 +12,44 @@ import {Event} from "./Event.sol";
  * @notice Each event is represented by an ERC721 contract and tickets correspond to ERC721 tokens.
  */
 contract EventFactory is IEventFactory, Ownable, ReentrancyGuard {
+    /**
+     * @notice Fee for listing an Event with the Event Factory.
+     */
     uint256 public listingFee;
+
+    /**
+     * @notice Default for maximum allowed tickets per user.
+     */
     uint256 private constant _MAX_TICKETS_PER_USER = 2;
+
+    /**
+     * @notice Array of contract addresses of current events.
+     */
     address[] private _currentEvents;
+
+    /**
+     * @notice Array of contract addresses of closed/archived events.
+     * @dev A closed event is considered archived.
+     */
     address[] private _archivedEvents;
 
+    /**
+     * @notice Mapping from event contract address to event details
+     */
     mapping(address => EventDetails) private _eventMap;
+
+    /**
+     * @notice Mapping from owner address to owned event contract addresses.
+     */
     mapping(address => address[]) private _ownerToEventMap;
+
+    /**
+     * @notice Mapping from ticket owner address to event contract addresses.
+     */
     mapping(address => address[]) private _userToEventMap;
+
+    error CallerNotCreator();
+    error EventAlreadyArchived();
 
     constructor(uint256 listingFee_) {
         _setupOwner(msg.sender);
@@ -115,9 +145,13 @@ contract EventFactory is IEventFactory, Ownable, ReentrancyGuard {
         uint256 tokenId,
         address claimer
     ) external override returns (bool) {
-        require(_eventMap[event_].status != EventStatus.ARCHIVED, "Event is already archived");
+        if (_eventMap[event_].status == EventStatus.ARCHIVED) {
+            revert EventAlreadyArchived();
+        }
         Event eventContract = Event(event_);
-        require(msg.sender == eventContract.creator(), "Caller is not creator of the event");
+        if (msg.sender != eventContract.creator()) {
+            revert CallerNotCreator();
+        }
         bool success = eventContract.validate(tokenId, claimer);
         require(success);
         return success;
@@ -130,12 +164,24 @@ contract EventFactory is IEventFactory, Ownable, ReentrancyGuard {
      * @return bool status of event closure.
      */
     function close(address event_) external override nonReentrant returns (bool) {
-        require(_eventMap[event_].status != EventStatus.ARCHIVED, "Event is already archived");
+        if (_eventMap[event_].status == EventStatus.ARCHIVED) {
+            revert EventAlreadyArchived();
+        }
         Event eventContract = Event(event_);
-        require(msg.sender == eventContract.creator(), "Caller is not creator of the event");
+        if (msg.sender != eventContract.creator()) {
+            revert CallerNotCreator();
+        }
         bool success = eventContract.close();
         require(success);
         _archiveEvent(event_);
+        return success;
+    }
+
+    /**
+     * @notice Function to let owner withdraw balance on contract.
+     */
+    function withdraw() external override onlyOwner nonReentrant returns (bool) {
+        (bool success, ) = owner().call{value: address(this).balance}("");
         return success;
     }
 
