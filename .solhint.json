@@ -8,6 +8,7 @@
     "no-empty-blocks": "off",
     "avoid-low-level-calls": "off",
     "max-line-length": ["error", 150],
+    "quotes": "off",
     "func-visibility": ["warn", { "ignoreConstructors": true }]
   }
 }
