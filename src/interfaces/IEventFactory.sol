@@ -29,6 +29,20 @@ interface IEventFactory {
     function withdraw() external returns (bool);
     function buy(address event_, uint256 amount) external payable returns (bool);
     function validate(address event_, uint256 tokenId, address claimer) external returns (bool);
+    function getEventDetails(
+        address event_
+    )
+        external
+        view
+        returns (
+            string memory name,
+            string memory description,
+            string memory imageUrl,
+            string memory dateTime,
+            string memory location,
+            uint256 price,
+            uint256 availableTickets
+        );
     function getCurrentEvents() external view returns (address[] memory);
     function getArchivedEvents() external view returns (address[] memory);
     function getCreatedEvents(address owner) external view returns (address[] memory);

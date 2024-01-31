@@ -186,6 +186,29 @@ contract EventFactory is IEventFactory, Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice Function to return events details.
+     */
+    function getEventDetails(
+        address event_
+    )
+        external
+        view
+        override
+        returns (
+            string memory name,
+            string memory description,
+            string memory imageUrl,
+            string memory dateTime,
+            string memory location,
+            uint256 price,
+            uint256 availableTickets
+        )
+    {
+        Event eventContract = Event(event_);
+        return eventContract.getContractDetails();
+    }
+
+    /**
      * @notice Function to return list of current events.
      * @return currentEvents Array of current Event contract addresses.
      */
