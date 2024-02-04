@@ -44,6 +44,7 @@ Functionalities for event organizers or creators.
 |Close an Event contract|Closes the sale of an Event, transfers the commission to the Event platform and the remaining balance of the event contract to the creator of the event. |
 
 Detailed documentation for the contract methods can be found here https://github.com/yoshi-doo/lightlink-hackathon/blob/main/docs/src/src/EventFactory.sol/contract.EventFactory.md.
+Contract deployed for the demo can be viewd at https://pegasus.lightlink.io/address/0xca064e047840136d1E98d566c1290dA4c8a0f0B7
 
 ## Supplementary React Frontend:
 For better visualization, the template contract can also be connected to an external react frontend developed as part of the hackathon.
