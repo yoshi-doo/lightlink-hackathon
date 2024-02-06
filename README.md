@@ -49,7 +49,7 @@ Contract deployed for the demo can be viewd at https://pegasus.lightlink.io/addr
 ## Supplementary React Frontend:
 For better visualization, the template contract can also be connected to an external react frontend developed as part of the hackathon.
 The repository for it can be found here https://github.com/yoshi-doo/lightlink-hack-frontend. It can be deployed as on ipfs or a dedicated server.
-Here is the version connected to the contract developed as part of the hackathon https://lightlink-hack-frontend-kfh5so7i6-yoshi-doos-projects.vercel.app/
+Here is the version connected to the contract developed as part of the hackathon https://lightlink-hack-frontend.vercel.app/
 
 Below are some screen shots from the react frontend for the ticketing application.
 |Page|Screen shot|
